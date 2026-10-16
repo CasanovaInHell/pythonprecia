@@ -1,111 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pythonprecia">
-<title>Pythonprecia — free Python on iPhone</title>
+<meta name="theme-color" content="#0d1117">
+<title>Pythonprecia — Free Python on your phone</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 <style>
-  :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: #0d1117; color: #e6edf3; display: flex; flex-direction: column; height: 100dvh; }
-  header { padding: 12px 16px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 10px; }
-  header .logo { font-size: 22px; }
-  header h1 { font-size: 18px; margin: 0; font-weight: 700; }
-  header p { margin: 0; font-size: 12px; color: #8b949e; }
-  #status { margin-left: auto; font-size: 12px; color: #d29922; text-align: right; }
-  #status.ready { color: #3fb950; }
-  main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-  textarea { flex: 1; width: 100%; border: 0; resize: none; padding: 14px 16px; background: #0d1117; color: #e6edf3; font-family: ui-monospace, Menlo, monospace; font-size: 15px; line-height: 1.5; outline: none; -webkit-appearance: none; }
-  .bar { display: flex; gap: 10px; padding: 10px 12px; background: #161b22; border-top: 1px solid #30363d; border-bottom: 1px solid #30363d; }
-  button { flex: 1; padding: 13px 0; font-size: 16px; font-weight: 600; border-radius: 10px; border: 1px solid #30363d; background: #21262d; color: #e6edf3; }
-  button#run { background: #238636; border-color: #238636; color: #fff; }
-  button:disabled { opacity: .5; }
-  #outwrap { height: 38%; display: flex; flex-direction: column; min-height: 0; }
-  #outlabel { padding: 8px 16px 0; font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: .08em; }
-  pre { flex: 1; margin: 0; padding: 10px 16px 16px; overflow: auto; font-family: ui-monospace, Menlo, monospace; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
-  .err { color: #f85149; }
-  footer { padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); font-size: 11px; color: #8b949e; background: #161b22; border-top: 1px solid #30363d; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#0d1117; color:#e6edf3; }
+  header { padding:14px 16px 8px; }
+  h1 { font-size:24px; margin:0; }
+  .sub { color:#9da7b3; font-size:13px; margin-top:2px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; padding:10px 16px; align-items:center; }
+  button { font-size:15px; border:0; border-radius:10px; padding:10px 14px; cursor:pointer; }
+  .run { background:#2ea043; color:#fff; font-weight:700; font-size:17px; padding:12px 22px; }
+  .run:disabled { background:#444; }
+  .ghost { background:#21262d; color:#e6edf3; border:1px solid #3d444d; }
+  .danger { background:#3a1d1d; color:#ff9d94; border:1px solid #6e2b25; }
+  select { font-size:15px; padding:10px; border-radius:10px; background:#21262d; color:#e6edf3; border:1px solid #3d444d; }
+  #tabs { display:flex; gap:6px; padding:0 16px; flex-wrap:wrap; }
+  .tab { background:#21262d; border:1px solid #3d444d; color:#9da7b3; border-radius:8px 8px 0 0; padding:7px 12px; font-size:14px; cursor:pointer; }
+  .tab.on { background:#151a21; color:#fff; border-bottom-color:#151a21; font-weight:700; }
+  #edwrap { margin:0 16px; border:1px solid #3d444d; border-radius:0 10px 10px 10px; overflow:hidden; }
+  .CodeMirror { height:300px; font-size:15px; }
+  #plain { width:100%; height:300px; background:#151a21; color:#e6edf3; border:0; padding:12px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; display:none; }
+  #status { padding:8px 16px 0; color:#9da7b3; font-size:13px; min-height:20px; }
+  #outwrap { margin:8px 16px 4px; }
+  #out { background:#000; color:#7dff9a; border:1px solid #3d444d; border-radius:10px; padding:12px; min-height:130px; white-space:pre-wrap; word-break:break-word; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:14px; margin:0; }
+  footer { padding:12px 16px 26px; color:#9da7b3; font-size:13px; text-align:center; }
 </style>
 </head>
 <body>
 <header>
-  <div class="logo">🐍</div>
-  <div>
-    <h1>Pythonprecia</h1>
-    <p>Free Python, right on your iPhone. No store, no cost.</p>
-  </div>
-  <div id="status">warming up…</div>
+  <h1>🐍 Pythonprecia</h1>
+  <div class="sub">A real Python IDE in your phone browser. No App Store. No cost. For the love of god.</div>
 </header>
-<main>
-  <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">print("Ahoy from Pythonprecia!")
 
-# Write any Python you like, then tap Run.
-for n in range(1, 6):
-    print("n squared is", n * n)
+<div id="tabs"></div>
+<div id="edwrap">
+  <textarea id="plain"></textarea>
+</div>
 
-name = "sailor"
-print(f"Fair winds, {name}.")
-</textarea>
-  <div class="bar">
-    <button id="run" disabled>▶ Run</button>
-    <button id="clear">Clear output</button>
-  </div>
-  <div id="outwrap">
-    <div id="outlabel">Output</div>
-    <pre id="out"></pre>
-  </div>
-</main>
-<footer>Tip: tap the Share button in Safari, then "Add to Home Screen" — Pythonprecia becomes an app icon. Made for Noah, for the love of god.</footer>
+<div class="bar">
+  <button class="run" id="run" disabled>▶ Run</button>
+  <button class="ghost" id="newf">＋ New file</button>
+  <button class="ghost" id="renf">Rename</button>
+  <button class="danger" id="delf">Delete</button>
+</div>
+<div class="bar">
+  <select id="examples">
+    <option value="">Load an example…</option>
+    <option value="hello">Hello + input</option>
+    <option value="fib">Fibonacci</option>
+    <option value="primes">Prime sieve</option>
+    <option value="data">Lists &amp; data</option>
+    <option value="numpyex">NumPy coin flips</option>
+  </select>
+  <button class="ghost" id="pkgs">Load numpy + pandas</button>
+  <button class="ghost" id="clearout">Clear output</button>
+</div>
 
-<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<div id="status">Warming up the Python engine… first load takes a few seconds.</div>
+
+<div id="outwrap"><pre id="out"></pre></div>
+
+<footer>Pythonprecia v2 — your programs save on this phone automatically.<br>For the love of god.</footer>
+
 <script>
-  const statusEl = document.getElementById('status');
-  const outEl = document.getElementById('out');
-  const runBtn = document.getElementById('run');
-  const codeEl = document.getElementById('code');
-  let pyodide = null;
+const LS_KEY = 'pythonprecia_files_v2';
+const out = document.getElementById('out');
+const statusEl = document.getElementById('status');
+const runBtn = document.getElementById('run');
 
-  function printOut(text) {
-    outEl.textContent += text + "\n";
-    outEl.scrollTop = outEl.scrollHeight;
-  }
-  function printErr(text) {
-    const span = document.createElement('span');
-    span.className = 'err';
-    span.textContent = text + "\n";
-    outEl.appendChild(span);
-    outEl.scrollTop = outEl.scrollHeight;
-  }
+const EXAMPLES = {
+  hello: 'name = input("What is your name? ")\nprint("Well met,", name)\nprint("Python lives in this phone now.")\n',
+  fib: 'def fib(n):\n    a, b = 0, 1\n    for _ in range(n):\n        print(a, end=" ")\n        a, b = b, a + b\n    print()\n\nfib(15)\n',
+  primes: 'def primes(limit):\n    sieve = [True] * (limit + 1)\n    sieve[0:2] = [False, False]\n    for i in range(2, int(limit ** 0.5) + 1):\n        if sieve[i]:\n            sieve[i*i::i] = [False] * len(sieve[i*i::i])\n    return [i for i, ok in enumerate(sieve) if ok]\n\nprint(primes(100))\n',
+  data: 'crew = ["Anthony", "Noah", "Kiki"]\nfor i, name in enumerate(crew, 1):\n    print(i, name, len(name), "letters")\n\nages = {"Anthony": 264, "Noah": 27}\nprint("Average name length:", sum(len(n) for n in crew) / len(crew))\n',
+  numpyex: 'import numpy as np\nflips = np.random.randint(0, 2, size=1000)\nprint("Heads:", flips.sum(), "of 1000 coin flips")\nprint("Fair coin should land near 500.")\n'
+};
 
-  (async () => {
-    try {
-      pyodide = await loadPyodide();
-      pyodide.setStdout({ batched: (s) => printOut(s) });
-      pyodide.setStderr({ batched: (s) => printErr(s) });
-      statusEl.textContent = "ready ⚓";
-      statusEl.classList.add('ready');
-      runBtn.disabled = false;
-    } catch (e) {
-      statusEl.textContent = "failed to load";
-      printErr("Python could not load. Check your connection and reload the page.");
-    }
-  })();
+let files = {};
+try { files = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (e) { files = {}; }
+if (!files['main.py']) files['main.py'] = EXAMPLES.fib;
+let current = Object.keys(files)[0];
 
-  runBtn.addEventListener('click', async () => {
-    if (!pyodide) return;
-    runBtn.disabled = true;
-    try {
-      await pyodide.runPythonAsync(codeEl.value);
-    } catch (e) {
-      printErr(String(e.message || e));
-    }
-    runBtn.disabled = false;
+let editor = null;
+const plain = document.getElementById('plain');
+if (window.CodeMirror) {
+  editor = CodeMirror(document.getElementById('edwrap'), {
+    mode: 'python', theme: 'material-darker', lineNumbers: true,
+    indentUnit: 4, tabSize: 4, viewportMargin: Infinity
   });
+  editor.on('change', saveCurrent);
+} else {
+  plain.style.display = 'block';
+  plain.addEventListener('input', saveCurrent);
+}
+function getCode() { return editor ? editor.getValue() : plain.value; }
+function setCode(v) { if (editor) editor.setValue(v); else plain.value = v; }
+function saveCurrent() {
+  files[current] = getCode();
+  localStorage.setItem(LS_KEY, JSON.stringify(files));
+}
+function renderTabs() {
+  const wrap = document.getElementById('tabs');
+  wrap.innerHTML = '';
+  Object.keys(files).forEach(name => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (name === current ? ' on' : '');
+    b.textContent = name;
+    b.onclick = () => { saveCurrent(); current = name; setCode(files[current]); renderTabs(); };
+    wrap.appendChild(b);
+  });
+}
+setCode(files[current]);
+renderTabs();
 
-  document.getElementById('clear').addEventListener('click', () => { outEl.textContent = ""; });
+document.getElementById('newf').onclick = () => {
+  const name = prompt('Name the new file:', 'program.py');
+  if (!name) return;
+  saveCurrent();
+  files[name] = '# ' + name + '\n\n';
+  current = name;
+  localStorage.setItem(LS_KEY, JSON.stringify(files));
+  setCode(files[current]); renderTabs();
+};
+document.getElementById('renf').onclick = () => {
+  const name = prompt('Rename ' + current + ' to:', current);
+  if (!name || name === current) return;
+  files[name] = getCode();
+  delete files[current];
+  current = name;
+  localStorage.setItem(LS_KEY, JSON.stringify(files));
+  renderTabs();
+};
+document.getElementById('delf').onclick = () => {
+  if (Object.keys(files).length === 1) { alert('Keep at least one file.'); return; }
+  if (!confirm('Delete ' + current + '?')) return;
+  delete files[current];
+  current = Object.keys(files)[0];
+  localStorage.setItem(LS_KEY, JSON.stringify(files));
+  setCode(files[current]); renderTabs();
+};
+document.getElementById('examples').onchange = (e) => {
+  if (e.target.value) { setCode(EXAMPLES[e.target.value]); saveCurrent(); }
+  e.target.value = '';
+};
+document.getElementById('clearout').onclick = () => { out.textContent = ''; };
+
+let pyodide = null;
+let pkgsLoaded = false;
+async function boot() {
+  try {
+    pyodide = await loadPyodide();
+    pyodide.setStdout({ batched: (s) => { out.textContent += s + '\n'; } });
+    pyodide.setStderr({ batched: (s) => { out.textContent += s + '\n'; } });
+    statusEl.textContent = 'Python is ready. Write code, tap Run.';
+    runBtn.disabled = false;
+  } catch (e) {
+    statusEl.textContent = 'The Python engine could not load — check your connection and refresh.';
+  }
+}
+boot();
+
+document.getElementById('pkgs').onclick = async () => {
+  if (!pyodide || pkgsLoaded) return;
+  statusEl.textContent = 'Loading numpy + pandas… this can take a bit.';
+  try {
+    await pyodide.loadPackage(['numpy', 'pandas']);
+    pkgsLoaded = true;
+    statusEl.textContent = 'numpy + pandas loaded. The NumPy example will run now.';
+  } catch (e) {
+    statusEl.textContent = 'Package load failed — connection trouble. Try again.';
+  }
+};
+
+runBtn.onclick = async () => {
+  if (!pyodide) return;
+  out.textContent = '';
+  runBtn.disabled = true;
+  const code = getCode();
+  const wrapped = 'import sys\n' +
+    'class _In:\n' +
+    '    def readline(self, *a):\n' +
+    '        return __import__("js").prompt("Input:") or ""\n' +
+    'sys.stdin = _In()\n' + code;
+  try {
+    await pyodide.runPythonAsync(wrapped);
+  } catch (err) {
+    out.textContent += '\n' + err.message + '\n';
+  }
+  runBtn.disabled = false;
+};
 </script>
 </body>
 </html>
